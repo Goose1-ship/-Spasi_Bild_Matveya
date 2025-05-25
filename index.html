@@ -2,181 +2,186 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8" />
-  <title>Спаси билд Матвея</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>🔥 Спаси Билд Матвея 🔥</title>
   <style>
+    * { box-sizing: border-box; }
     body {
       margin: 0;
-      background: #111;
-      overflow: hidden;
-      color: #0f0;
       font-family: monospace;
+      background-color: #111;
+      color: white;
+      overflow: hidden;
     }
-    #game {
+    #gameArea {
       position: relative;
       width: 100vw;
       height: 100vh;
-      background: #222;
+      background: linear-gradient(to bottom right, #1a1a1a, #333);
     }
-    .player, .bug, .coffee {
+    .player, .coffee, .bug {
       position: absolute;
       width: 40px;
       height: 40px;
     }
     .player {
-      background: url('https://cdn-icons-png.flaticon.com/512/4712/4712075.png') no-repeat center/contain;
-    }
-    .bug {
-      background: url('https://cdn-icons-png.flaticon.com/512/3524/3524388.png') no-repeat center/contain;
+      background: url('https://emojicdn.elk.sh/🧑‍💻') no-repeat center;
+      background-size: cover;
+      z-index: 2;
     }
     .coffee {
-      background: url('https://cdn-icons-png.flaticon.com/512/415/415733.png') no-repeat center/contain;
+      background: url('https://emojicdn.elk.sh/☕') no-repeat center;
+      background-size: cover;
     }
-    #score {
+    .bug {
+      background: url('https://emojicdn.elk.sh/🐞') no-repeat center;
+      background-size: cover;
+    }
+    #scoreboard {
       position: absolute;
       top: 10px;
       left: 10px;
-      color: #0f0;
       font-size: 20px;
-      z-index: 10;
-    }
-    #bsod, #certificate {
-      position: absolute;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
-      display: none;
-      justify-content: center;
-      align-items: center;
-      flex-direction: column;
-      padding: 20px;
-      text-align: center;
-      z-index: 100;
+      background: rgba(0,0,0,0.5);
+      padding: 8px;
+      border-radius: 8px;
     }
     #bsod {
-      background: #0000AA;
+      display: none;
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      background: #0000aa;
       color: white;
-      font-size: 24px;
+      font-family: monospace;
+      padding: 20px;
+      z-index: 999;
     }
     #certificate {
-      background: #fdf6e3;
+      display: none;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 24px;
+      background: white;
       color: black;
-      font-size: 22px;
-    }
-    button {
-      margin-top: 20px;
-      padding: 10px 20px;
-      font-size: 16px;
-      cursor: pointer;
+      padding: 40px;
+      border: 5px solid gold;
+      border-radius: 10px;
+      z-index: 999;
     }
   </style>
 </head>
 <body>
-  <div id="game">
-    <div id="score">☕: 0</div>
-    <div class="player" id="player"></div>
-    <div id="bsod"></div>
-    <div id="certificate"></div>
+  <div id="gameArea">
+    <div id="scoreboard">☕ 0 / 10</div>
+    <div id="bsod">
+      <h1>🎭 Синий экран смерти</h1>
+      <p>Матвей поймал баг и всё сломалось...</p>
+      <button onclick="location.reload()">Перезагрузить билд</button>
+    </div>
+    <div id="certificate">
+      <h2>📜 Сертификат</h2>
+      <p>Матвей прошёл через 🔥 Адский Хакатон 🔥 и выжил!</p>
+    </div>
   </div>
+  <script>
+    const gameArea = document.getElementById('gameArea');
+    const scoreboard = document.getElementById('scoreboard');
+    const bsod = document.getElementById('bsod');
+    const certificate = document.getElementById('certificate');
 
-<script>
-  const game = document.getElementById('game');
-  const player = document.getElementById('player');
-  const scoreBoard = document.getElementById('score');
-  const bsod = document.getElementById('bsod');
-  const certificate = document.getElementById('certificate');
+    const player = document.createElement('div');
+    player.classList.add('player');
+    gameArea.appendChild(player);
 
-  let score = 0;
-  let playerX = 100;
-  let playerY = 100;
-  let hardMode = false;
+    let pos = { x: 100, y: 100 };
+    let score = 0;
+    let bugs = [];
 
-  function movePlayer(dx, dy) {
-    playerX = Math.max(0, Math.min(window.innerWidth - 40, playerX + dx));
-    playerY = Math.max(0, Math.min(window.innerHeight - 40, playerY + dy));
-    player.style.left = playerX + 'px';
-    player.style.top = playerY + 'px';
-  }
-
-  document.addEventListener('keydown', e => {
-    switch(e.key) {
-      case 'ArrowLeft': movePlayer(-20, 0); break;
-      case 'ArrowRight': movePlayer(20, 0); break;
-      case 'ArrowUp': movePlayer(0, -20); break;
-      case 'ArrowDown': movePlayer(0, 20); break;
-    }
-  });
-
-  function spawn(type) {
-    const el = document.createElement('div');
-    el.classList.add(type);
-    el.style.left = Math.random() * (window.innerWidth - 40) + 'px';
-    el.style.top = Math.random() * (window.innerHeight - 40) + 'px';
-    game.appendChild(el);
-    return el;
-  }
-
-  function checkCollision(a, b) {
-    const ar = a.getBoundingClientRect();
-    const br = b.getBoundingClientRect();
-    return !(
-      ar.right < br.left ||
-      ar.left > br.right ||
-      ar.bottom < br.top ||
-      ar.top > br.bottom
-    );
-  }
-
-  setInterval(() => {
-    const bug = spawn('bug');
-    if (hardMode) {
-      bug.style.transition = 'all 2s linear';
-      const x = Math.random() * (window.innerWidth - 40);
-      const y = Math.random() * (window.innerHeight - 40);
-      bug.style.left = x + 'px';
-      bug.style.top = y + 'px';
-    }
-    setTimeout(() => bug.remove(), 3000);
-
-    if (!hardMode || Math.random() < 0.3) {
-      const coffee = spawn('coffee');
-      setTimeout(() => coffee.remove(), 5000);
-    }
-  }, 2000);
-
-  setInterval(() => {
-    document.querySelectorAll('.bug').forEach(bug => {
-      if (checkCollision(player, bug)) {
-        bsod.style.display = 'flex';
-        bsod.innerHTML = `
-          <h1>:(</h1>
-          <p>Матвей столкнулся с критическим багом: ERROR_CODE_COFFEE_NOT_FOUND</p>
-          <p>Система перезагрузится... может быть.</p>
-          <button onclick="location.reload()">Перезагрузить билд</button>
-        `;
-      }
+    document.addEventListener('keydown', e => {
+      const speed = 20;
+      if (e.key === 'ArrowUp') pos.y -= speed;
+      if (e.key === 'ArrowDown') pos.y += speed;
+      if (e.key === 'ArrowLeft') pos.x -= speed;
+      if (e.key === 'ArrowRight') pos.x += speed;
+      player.style.left = pos.x + 'px';
+      player.style.top = pos.y + 'px';
+      checkCollisions();
     });
 
-    document.querySelectorAll('.coffee').forEach(coffee => {
-      if (checkCollision(player, coffee)) {
-        score++;
-        scoreBoard.textContent = '☕: ' + score;
-        coffee.remove();
-        if (score === 5) {
-          hardMode = true;
-          game.style.background = '#330000';
-          alert('🔥 Режим "Адский Хакатон" активирован! Баги начинают двигаться, кофе почти нет!');
+    function spawnCoffee() {
+      const coffee = document.createElement('div');
+      coffee.classList.add('coffee');
+      coffee.style.left = Math.random() * (window.innerWidth - 40) + 'px';
+      coffee.style.top = Math.random() * (window.innerHeight - 40) + 'px';
+      gameArea.appendChild(coffee);
+    }
+
+    function spawnBug() {
+      const bug = document.createElement('div');
+      bug.classList.add('bug');
+      bug.style.left = Math.random() * (window.innerWidth - 40) + 'px';
+      bug.style.top = Math.random() * (window.innerHeight - 40) + 'px';
+      gameArea.appendChild(bug);
+      bugs.push(bug);
+    }
+
+    function checkCollisions() {
+      const playerRect = player.getBoundingClientRect();
+      document.querySelectorAll('.coffee').forEach(coffee => {
+        const coffeeRect = coffee.getBoundingClientRect();
+        if (isColliding(playerRect, coffeeRect)) {
+          coffee.remove();
+          score++;
+          scoreboard.textContent = `☕ ${score} / 10`;
+          if (score === 5) startHellMode();
+          if (score === 10) winGame();
+          spawnCoffee();
         }
-        if (score >= 10) {
-          certificate.style.display = 'flex';
-          certificate.innerHTML = `
-            <h2>СЕРТИФИКАТ</h2>
-            <p>Выдан Матвею за героическую победу над багами, собранный кофеин и спасённый билд.</p>
-            <p>Теперь он достоин звания Junior Bug Slayer!</p>
-            <button onclick="location.reload()">Играть снова</button>
-          `;
+      });
+      bugs.forEach(bug => {
+        const bugRect = bug.getBoundingClientRect();
+        if (isColliding(playerRect, bugRect)) {
+          gameOver();
         }
-      }
-    });
-  }, 100);
-</script>
+      });
+    }
+
+    function isColliding(rect1, rect2) {
+      return !(
+        rect1.right < rect2.left ||
+        rect1.left > rect2.right ||
+        rect1.bottom < rect2.top ||
+        rect1.top > rect2.bottom
+      );
+    }
+
+    function gameOver() {
+      bsod.style.display = 'block';
+    }
+
+    function winGame() {
+      certificate.style.display = 'block';
+    }
+
+    function startHellMode() {
+      document.body.style.backgroundColor = '#440000';
+      setInterval(() => {
+        bugs.forEach(bug => {
+          bug.style.left = Math.random() * (window.innerWidth - 40) + 'px';
+          bug.style.top = Math.random() * (window.innerHeight - 40) + 'px';
+        });
+      }, 500);
+      for (let i = 0; i < 5; i++) spawnBug();
+    }
+
+    // Старт игры
+    player.style.left = pos.x + 'px';
+    player.style.top = pos.y + 'px';
+    for (let i = 0; i < 3; i++) spawnCoffee();
+    for (let i = 0; i < 2; i++) spawnBug();
+  </script>
 </body>
 </html>
